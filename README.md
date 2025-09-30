@@ -15,6 +15,7 @@ MeMo (note app) — published on Microsoft Store and Xiaomi App Store.
 - Useful utilities: tokenizer files, example quantized ONNX for desktop (`model_quint8_avx2.onnx`).  
 - Integration examples: guidance to embed TFLite models into Android/Flutter clients.
 
+
 ## Quick start (run on Linux / CPU)
 
 > We recommend Python 3.10 on Linux/CPU for reproducibility.
@@ -23,25 +24,42 @@ MeMo (note app) — published on Microsoft Store and Xiaomi App Store.
 ```bash
 git clone https://github.com/Joyhaotian/Quantitative-bert-model-for-memo.git
 git lfs pull   # necessary to download large model files tracked by LFS
-2. Create venv and install deps
-bash
-复制代码
+````
+
+### 2. Create venv and install deps
+
+```bash
 python -m venv .venv
 source .venv/bin/activate
+```
 
+```bash
 python -m pip install -U pip setuptools wheel
 pip install transformers==4.41.1 torch>=2.1,<3 onnx==1.14.0 onnxruntime==1.15.1 onnx-simplifier onnx-tf==1.10.0 tensorflow==2.13.0
 pip install --no-deps "typing-extensions==4.12.2"
-3. Export ONNX from a HuggingFace checkpoint
-bash
-复制代码
+```
+
+### 3. Export ONNX from a HuggingFace checkpoint
+
+```bash
 python export_onnx.py \
   --model nghuyong/ernie-3.0-nano-zh \
   --output model_quint8_avx2.onnx \
   --seq_len 128
-4. (Optional) ONNX → TF → TFLite
-bash
-复制代码
+```
+
+### 4. (Optional) ONNX → TF → TFLite
+
+```bash
 python onnx_fix_indices.py --input model_quint8_avx2.onnx --output model_fixed.onnx
+```
+
+```bash
 python onnx_to_tf.py --input model_fixed.onnx --output saved_model_dir
+```
+
+```bash
 python tf_to_tflite.py --saved_model_dir saved_model_dir --output ernie3_nano_select.tflite --quantize
+```
+
+
