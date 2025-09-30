@@ -18,10 +18,9 @@ MeMo (note app) — published on Microsoft Store and Xiaomi App Store.
  Quick start (run on Linux / CPU)
  > We recommend Python 3.10 on Linux/CPU for reproducibility.
 
- 1. Clone & LFS
+   1. Clone & LFS
  git clone https://github.com/Joyhaotian/Quantitative-bert-model-for-memo.git
  git lfs pull   # necessary to download large model files tracked by LFS
-
   2.Create venv and install deps
  python -m venv .venv
  source .venv/bin/activate
