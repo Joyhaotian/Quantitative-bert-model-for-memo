@@ -1,104 +1,37 @@
 📘 Quantitative-BERT Model for Memo
 
-This repository provides scripts and converted models for using ERNIE-3.0 Nano in memo classification tasks.
+Scripts and converted models to run a compact ERNIE / BERT-style keyword-classification model on desktop and mobile. Includes reproducible conversion pipeline: PyTorch → ONNX → TensorFlow SavedModel → TFLite (post-training quantization).
 It includes both ONNX (PC client) and TFLite (mobile client) versions with fully built-in BERT support.
+MeMo (note app) — published on Microsoft Store and Xiaomi App Store.  
+- Microsoft Store: https://apps.microsoft.com/detail/9N8BJ58F1Q24  
+- Xiaomi App Store: https://app.mi.com/details?id=com.tiantian.memo&ref=search
 
 ✨ Overview
 
-Base model: nghuyong/ernie-3.0-nano-zh
+ Highlights / Features
+- Compact on-device models: Quantized TFLite for mobile (reduced model size for CPU inference).  
+- Reproducible conversion pipeline: scripts to export PyTorch → ONNX → TF SavedModel → TFLite.  
+- Mobile-ready operator: TFLITE_BUILTINS only (avoids custom TF ops).  
+- Useful utilities: tokenizer files, example quantized ONNX for desktop (`model_quint8_avx2.onnx`).  
+- Integration examples: guidance to embed TFLite models into Android/Flutter clients.
 
-Conversion pipeline:
-
-Hugging Face PyTorch → ONNX (PC)
-
-ONNX → TensorFlow SavedModel
-
-TensorFlow → TFLite (mobile)
-
-The converted models are used to classify user-written memos directly on client devices.
-
-model_quint8_avx2.onnx: Quantized ONNX model optimized for desktop clients.
-
-ernie3_nano_select.tflite: Quantized TFLite model optimized for mobile clients.
-
-⚙️ Environment Setup
-
-We recommend Python 3.10 on Linux/CPU for reproducibility.
-
-python -m pip install -U pip setuptools wheel
-python -m pip install "transformers==4.41.1" "torch>=2.1,<3"
-python -m pip install "onnx==1.14.0" "onnxruntime==1.15.1" "onnx-simplifier==0.4.33" "onnx-tf==1.10.0"
-python -m pip install "tensorflow==2.13.0" "tensorflow-probability==0.21.0"
-# Fix typing-extensions if TensorFlow downgrades it
-python -m pip install --no-deps "typing-extensions==4.12.2"
-
-🛠 Conversion Pipeline
-1. Export ONNX (with approximate GELU)
-
-Script: export_onnx.py
-
-Uses gelu_new to avoid Erf.
-
-Fixes sequence length and sets opset_version=12.
-
-2. Fix Gather indices → int32
-
-Script: onnx_fix_indices.py
-
-Ensures Gather/GatherND use int32 indices.
-
-3. Downgrade Unsqueeze ops
-
-Script: downgrade_unsqueeze_to11.py
-
-Converts Unsqueeze-13 → Unsqueeze-11.
-
-Sets global opset to 12.
-
-4. Convert ONNX → TensorFlow
-
-Script: onnx_to_tf.py
-
-Converts ONNX to TensorFlow SavedModel using onnx-tf.
-
-5. Convert TensorFlow → TFLite
-
-Script: tf_to_tflite.py
-
-Produces .tflite with only TFLITE_BUILTINS ops.
-
-Optional optimizations: float16 / default quantization.
-
-📂 Repository Structure
-Quantitative-bert-model-for-memo/
-│
-├── model_quint8_avx2.onnx          # Quantized ONNX model (desktop)
-├── ernie3_nano_select.tflite       # Quantized TFLite model (mobile)
-├── sentencepiece.bpe.model         # Tokenizer model
-├── tokenizer.json                  # Hugging Face tokenizer config
-├── tokenizer_config.json
-├── special_tokens_map.json
-├── vocab.txt
-│
-├── export_onnx.py                  # Step 1: PyTorch → ONNX
-├── onnx_fix_indices.py             # Step 2: Fix indices
-├── downgrade_unsqueeze_to11.py     # Step 3: Downgrade ops
-├── onnx_to_tf.py                   # Step 4: ONNX → TensorFlow
-├── tf_to_tflite.py                 # Step 5: TF → TFLite
-│
-└── LICENSE
-
-📌 Key Notes
-
-No Erf ops → safer for mobile deployment.
-
-Only TFLITE_BUILTINS ops used (avoids Select TF Ops).
-
-Fixed-length export ensures deterministic behavior.
-
-Optimized for classification of short text memos on device.
-
-📜 License
-
-Apache 2.0 License. See LICENSE
- for details.
+ Quick start (run on Linux / CPU)
+ > We recommend Python 3.10 on Linux/CPU for reproducibility.
+ 1. Clone & LFS
+ git clone https://github.com/Joyhaotian/Quantitative-bert-model-for-memo.git
+ git lfs pull   # necessary to download large model files tracked by LFS
+ 2.Create venv and install deps
+ python -m venv .venv
+ source .venv/bin/activate
+ python -m pip install -U pip setuptools wheel
+ pip install transformers==4.41.1 torch>=2.1,<3 onnx==1.14.0 onnxruntime==1.15.1 onnx-simplifier onnx-tf==1.10.0 tensorflow==2.13.0
+ pip install --no-deps "typing-extensions==4.12.2"
+ 3.Export ONNX from a HuggingFace checkpoint
+ python export_onnx.py \
+  --model nghuyong/ernie-3.0-nano-zh \
+  --output model_quint8_avx2.onnx \
+  --seq_len 128
+ 4.Optional: ONNX → TF → TFLite
+  python onnx_fix_indices.py --input model_quint8_avx2.onnx --output model_fixed.onnx
+  python onnx_to_tf.py --input model_fixed.onnx --output saved_model_dir
+  python tf_to_tflite.py --saved_model_dir saved_model_dir --output ernie3_nano_select.tflite --quantize
