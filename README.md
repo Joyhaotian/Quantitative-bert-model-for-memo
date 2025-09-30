@@ -23,19 +23,19 @@ MeMo (note app) — published on Microsoft Store and Xiaomi App Store.
 -  git lfs pull   # necessary to download large model files tracked by LFS
   
 - Create venv and install deps
--  python -m venv .venv
--  source .venv/bin/activate
--  python -m pip install -U pip setuptools wheel
--  pip install transformers==4.41.1 torch>=2.1,<3 onnx==1.14.0 onnxruntime==1.15.1 onnx-simplifier onnx-tf==1.10.0 tensorflow==2.13.0
--  pip install --no-deps "typing-extensions==4.12.2"
+  python -m venv .venv
+  source .venv/bin/activate
+  python -m pip install -U pip setuptools wheel
+  pip install transformers==4.41.1 torch>=2.1,<3 onnx==1.14.0 onnxruntime==1.15.1 onnx-simplifier onnx-tf==1.10.0 tensorflow==2.13.0
+  pip install --no-deps "typing-extensions==4.12.2"
  
 - Export ONNX from a HuggingFace checkpoint
--  python export_onnx.py \
--   --model nghuyong/ernie-3.0-nano-zh \
--   --output model_quint8_avx2.onnx \
--   --seq_len 128
+  python export_onnx.py \
+   --model nghuyong/ernie-3.0-nano-zh \
+   --output model_quint8_avx2.onnx \
+   --seq_len 128
   
 - Optional: ONNX → TF → TFLite
--   python onnx_fix_indices.py --input model_quint8_avx2.onnx --output model_fixed.onnx
--   python onnx_to_tf.py --input model_fixed.onnx --output saved_model_dir
--   python tf_to_tflite.py --saved_model_dir saved_model_dir --output ernie3_nano_select.tflite --quantize
+   python onnx_fix_indices.py --input model_quint8_avx2.onnx --output model_fixed.onnx
+   python onnx_to_tf.py --input model_fixed.onnx --output saved_model_dir
+   python tf_to_tflite.py --saved_model_dir saved_model_dir --output ernie3_nano_select.tflite --quantize
